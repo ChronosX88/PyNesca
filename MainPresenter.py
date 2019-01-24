@@ -34,13 +34,13 @@ class MainPresenter:
             thread.start()
 
     def on_thread_exit(self, is_last):
-        if is_last == True:
+        if is_last:
             self.isScanEnabled = False
             self.ui.startButton.setText("Start")
             return
         count = 0
         for thr in self.threads:
-            if thr.is_running == True:
+            if thr.is_running:
                 count = count + 1
         self.setCurrentThreadsLabel(count)
 
@@ -52,7 +52,7 @@ class MainPresenter:
             count = 0
             is_last_thread = False
             for i in self.threads:
-                if i.is_running != True:
+                if not i.is_running:
                     count += 1
             if count == len(self.threads):
                 is_last_thread = True
@@ -90,7 +90,7 @@ class ScanThread(QThread):
                 count = 0
                 is_last_thread = False
                 for i in self.presenter.threads:
-                    if i.isRunning() != True:
+                    if not i.isRunning():
                         count += 1
                 if count == len(self.presenter.threads):
                     is_last_thread = True
