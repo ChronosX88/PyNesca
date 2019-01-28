@@ -8,13 +8,19 @@ class testIpGenerator(TestCase):
 
     def setUp(self):
         p = Parser()
-        self.ipgen = IpGenerator(p.parse_address_field("192.168.1.1"), [80])
+        self.ipgen = IpGenerator(
+        p.parse_address_field("192.168.1.1 - 192.168.1.10"), [80, 90])
 
     def testIpGeneration(self):
-        self.assertEquals(
+        '''self.assertEqual(
             self.ipgen.get_next_address(None),
-            (IPv4Address("192.168.1.1"), 80))
-        print(self.ipgen.get_next_address(None))
+            ("192.168.1.1", 80))'''
+        previous_address = None
+        a = True
+        while previous_address or a:
+             previous_address=self.ipgen.get_next_address(previous_address)
+             a = False
+        self.assertEqual(self.ipgen.get_next_address(None), None)
 
 
 if __name__ == "__main__":
