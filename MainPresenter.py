@@ -6,6 +6,7 @@ from PyQt5.Qt import *
 from address_generation.IpGenerator import IpGenerator
 from storage.JSONStorage import JSONStorage
 
+
 class MainPresenter:
     def __init__(self, ui):
         self.ui = ui
@@ -30,33 +31,30 @@ class MainPresenter:
             thread.exit_signal.connect(self.on_thread_exit)
             thread.start()
 
-    def on_thread_exit(self, is_last):
-        if is_last:
-            self.isScanEnabled = False
-            self.ui.startButton.setText("Start")
-            self.storage.save()
-            return
+    def on_thread_exit(self):
         count = 0
         for thr in self.threads:
             if thr.is_running:
                 count = count + 1
+        if count == len(self.threads):
+            self.on_end_scanning()
         self.setCurrentThreadsLabel(count)
+
+    def on_end_scanning(self):
+            self.isScanEnabled = False
+            self.ui.startButton.setText("Start")
+            self.storage.save()
 
     def stopScan(self):
         self.isScanEnabled = False
         for thread in self.threads:
             thread.exit()
-            thread.is_running = False
-            count = 0
-            is_last_thread = False
-            for i in self.threads:
-                if not i.is_running:
-                    count += 1
-            if count == len(self.threads):
-                is_last_thread = True
-            thread.exit_signal.emit(is_last_thread)
+        for thread in self.threads:
+            thread.wait()
+        self.on_end_scanning()
         self.threads.clear()
         self.ui.currentThreadsLabel.setText("0")
+
     def setLogText(self, string):
         self.ui.dataText.append("[" + str(datetime.datetime.now()) + "] " + str(string))
 
@@ -67,7 +65,7 @@ class MainPresenter:
 class ScanThread(QThread):
 
     signal = pyqtSignal(str)
-    exit_signal = pyqtSignal(bool)
+    exit_signal = pyqtSignal()
 
     def __init__(self, ip_generator, ports, timeout, presenter, parent=None):
         QThread.__init__(self, parent)
@@ -80,7 +78,6 @@ class ScanThread(QThread):
         self.is_running = True
 
     def run(self):
-        print("Thread sterted")
         while True:
             scan_address = self.ip_generator.get_next_address(self.previous_address)
             if not scan_address:
@@ -88,18 +85,10 @@ class ScanThread(QThread):
             self.previous_address = scan_address
             scan_result = self.coreModel.scan_address(scan_address)
             self.presenter.storage.put_responce(scan_address, scan_result)
-            if scan_result==0:
-                self.signal.emit( '%s has open port: %s' % scan_address)
+            if scan_result == 0:
+                self.signal.emit('%s has open port: %s' % scan_address)
             else:
-                self.signal.emit( '%s has closed port: %s' % scan_address)
+                self.signal.emit('%s has closed port: %s' % scan_address)
         self.is_running = False
-        print("Thread stopped")
-        count = 0
-        is_last_thread = False
-        for i in self.presenter.threads:
-            if not i.isRunning():
-                count += 1
-        if count == len(self.presenter.threads):
-            is_last_thread = True
-        self.exit_signal.emit(is_last_thread)
+        self.exit_signal.emit()
         self.exit(1)
