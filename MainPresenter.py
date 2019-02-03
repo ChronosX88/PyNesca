@@ -22,7 +22,7 @@ class MainPresenter:
         timeout = 3 if not timeout else int(timeout)
         addresses = self.parser.parse_address_field(ipRanges)
         ports = self.parser.parse_port_field(portsStr)
-        self.ip_generator = IpGenerator(addresses,ports)
+        self.ip_generator = IpGenerator(addresses, ports)
         self.scanner = CoreModel(timeout)
         threadNumber = int(threadNumber)
         for i in range(threadNumber):
@@ -42,22 +42,22 @@ class MainPresenter:
         for thread in self.threads:
             scan_worker, scan_thread = thread
             scan_thread.start()
-    
-    def changeThreadLabel(self,number_of_threads):
+
+    def changeThreadLabel(self, number_of_threads):
         self.number_of_threads = number_of_threads
         self.ui.currentThreadsLabel.setText(str(number_of_threads))
 
     def on_worker_exit(self):
-        print("on_worker_exit called")
         self.changeThreadLabel(self.number_of_threads - 1)
-        with self.exit_lock: 
+        with self.exit_lock:
             for num, thread in enumerate(self.threads):
-                scan_worker, scan_thread = thread
-                if not scan_worker.isRunning:
-                    self.threads.pop(num)
-                    break
+                    scan_worker, scan_thread = thread
+                    if not scan_worker.isRunning:
+                        self.threads.pop(num)
+                        break
         if self.number_of_threads == 0:
             self.on_end_scanning()
+
     def on_end_scanning(self):
             self.isScanEnabled = False
             self.ui.startButton.setText("Start")
@@ -72,12 +72,8 @@ class MainPresenter:
     def log_text(self, string):
         self.ui.dataText.append("[" + str(datetime.datetime.now()) + "] " + str(string))
 
-    def setCurrentThreadsLabel(self, threadNumber):
-        self.ui.currentThreadsLabel.setText(str(threadNumber))
-
 
 class ScanWorker(QObject):
-
 
     log_signal = pyqtSignal(str)
     exit_signal = pyqtSignal()
@@ -103,7 +99,8 @@ class ScanWorker(QObject):
                 self.log_signal.emit('%s has open port: %s' % scan_address)
             else:
                 self.log_signal.emit('%s has closed port: %s' % scan_address)
+        self.stop()
+
     def stop(self):
-        print("stop called")
         self.isRunning = False
         self.exit_signal.emit()
