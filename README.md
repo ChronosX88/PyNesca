@@ -1,5 +1,6 @@
 PySca - a NEtwork SCAnner rewritten in Python
 =============================
+[Вариант на русском](README.ru.md)
 What is it?
 ------------
 According to [Wikipedia](https://en.wikipedia.org/wiki/Network_enumeration#Software),
