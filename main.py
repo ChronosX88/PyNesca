@@ -4,7 +4,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from main_ui import *
-import MainPresenter
+import core.MainPresenter
 
 
 class MyWin(QtWidgets.QMainWindow):
@@ -14,7 +14,7 @@ class MyWin(QtWidgets.QMainWindow):
 
         self.ui = Ui_Form()
         self.ui.setupUi(self)
-        self.presenter = MainPresenter.MainPresenter(self.ui)
+        self.presenter = core.MainPresenter.MainPresenter(self.ui)
         self.ui.startButton.clicked.connect(self.startButtonClicked)
         self.isScanActive = False
 
