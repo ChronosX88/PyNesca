@@ -1,13 +1,3 @@
-def convert_function(_from, _to):
-    '''This decorator is simple way to declare ability of function to be
-    converter from name _from to name _to in convert table'''
-    def real_decorator(function):
-        function.__from__ = _from
-        function.__to__ = _to
-        return function
-    return real_decorator
-
-
 class ConvertTable():
     '''The class is used to store and find the right function to convert value from
     one key to another'''
@@ -18,14 +8,29 @@ class ConvertTable():
         '''Here you can add function to ConvertTable.'''
         #TODO: make this method produce new functions, that will be able to
         #create converter chains
-        print("adding function", function)
         self.convert_functions.append(function)
+
+    def all_possible_conversions(self, from_keys):
+        result = set()
+        from_keys = set(from_keys)
+        for function in self.convert_functions:
+            input_args = set(value for key, value in
+            function.__annotations__.items() if
+            key!='return')
+            if input_args.issubset(from_keys):
+                result = result.union(set(function.__annotations__['return']))
+        return result
 
     def get_converter(self, from_keys, to_key):
         '''This function returns converter function, that can convert one key
         to another'''
+        to_key = {to_key}
         for function in self.convert_functions:
-            if function.__from__ in from_keys and function.__to__ == to_key:
-                return function.__from__, function
-        print("Can't find converter!")
+            input_args = set(value for key, value in
+            function.__annotations__.items() if
+            key!='return')
+            if input_args.issubset(from_keys) and to_key.issubset(function.__annotations__['return']):
+                return input_args, function
+        raise Exception("There is no converter for %s to %s" % (from_keys,
+        to_key))
         return None, None
