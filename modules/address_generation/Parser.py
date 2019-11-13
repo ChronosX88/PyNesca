@@ -1,6 +1,5 @@
 import ipaddress
 from core.prototypes.AbstractParser import AbstractParser
-from core.prototypes.AbstractModuleClass import internal
 
 
 class Parser(AbstractParser):
@@ -9,10 +8,9 @@ class Parser(AbstractParser):
     'ports'}:
         result = dict()
         result['ports'] = self.parse_port_field(ports)
-        result['ipv4_ranges'] = self.get_all_addresses(ips)
+        result['ipv4_objects'] = self.get_all_addresses(ips)
         return result
 
-    @internal
     def parse_port_field(self, ports):
         """
         Parses ports from string, returns them as integers in the list.
@@ -40,7 +38,6 @@ class Parser(AbstractParser):
             # Change to default ports from constant
             return [21, 22, 23, 25, 80, 443, 110, 111, 135, 139, 445, 8080, 8443, 53, 143, 989, 990, 3306, 1080, 5554, 6667, 2222, 4444, 666, 6666, 1337, 2020, 31337]
 
-    @internal
     def parse_address_field(self, ips):
         """
         Parses ip input string, returns the generator over them.
@@ -62,7 +59,6 @@ class Parser(AbstractParser):
                 for host in ip_obj:
                     yield host
 
-    @internal
     def get_all_addresses(self, ips):
         ip_objects = set()
         inputs = [ip.strip() for ip in ips.split(',')]

@@ -72,6 +72,7 @@ class MainPresenter:
             get_return_annotations(IpGenerator.get_next_address).union(get_return_annotations(CoreModel.scan_address)),
             get_argument_annotations(self.storage.put_responce)
         )
+        input()
         self.exit_lock = RLock()
 
     def startScan(self, ipRanges, portsStr, threadNumber, timeout):
@@ -174,6 +175,7 @@ class ScanWorker(QObject):
                 )
             print(scan_result)
             scan_address.update(scan_result)
+            print(scan_address)
             self.previous_address = scan_address
             self.storage.put_responce(
                 *convert_for_storage(scan_address)
@@ -181,9 +183,9 @@ class ScanWorker(QObject):
             string_scan_address = " ".join(key + ":" + str(scan_address[key]) for
             key in scan_address.keys()) 
             if scan_result == 0:
-                self.log_signal.emit('%s is open' % string_scan_address)
+                self.log_signal.emit(string_scan_address)
             else:
-                self.log_signal.emit('%s is closed' % string_scan_address)
+                self.log_signal.emit(string_scan_address)
         self.stop()
 
     def stop(self):
