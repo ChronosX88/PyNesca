@@ -9,21 +9,27 @@ MAX_ERRORS = 3
 
 
 class FTPScanner(AbstractScanner):
-    def __init__(self, timeout):
+    def __init__(self, timeout:"timeout", credentials:"credentials"):
         self.__timeout__ = timeout
+        self.__credantials__ = credentials
 
-    def scan_address(self, host: 'ipv4_str or hostname', port: 'port', credentials: 'tuples with login and password') -> {'scan_result'}:
+    def scan_address(self, host: 'ipv4_str', port: 'port') -> {'ftp_version', 'ftp_status', 'login', 'password'}:
         result = self.ftp_anonymous_login(host, port, self.__timeout__)
-        if result['status'] == 'error' or result['anonymous_login']:
+        if result['ftp_status'] == 'ok':
+            #Что-то делать с ошибками
             return result
-        result['credentials'] = self.ftp_bruteforce(
-            host, port, credentials, self.__timeout__)
-        return result
+        if not result['ftp_status'].startswith('530'):
+            return result
+        return self.ftp_bruteforce(
+            host, port, self.__credentials__, self.__timeout__)
 
     @staticmethod
     def ftp_anonymous_login(host, port, timeout):
         '''Get version and check if anonympous login is enabled'''
-        result = {}
+        result = {
+                key:None for key in ['ftp_version', 'ftp_status', 'login',
+                'password']
+                }
         ftp_connection = FTP(timeout=timeout)
         try:
             version = ftp_connection.connect(host=host, port=port)
@@ -31,15 +37,14 @@ class FTPScanner(AbstractScanner):
             result['ftp_version'] = version.lstrip('220 ')
             # Try to login as anonymous user
             ftp_connection.login()
-            result['anonymous_login'] = True
-            result['status'] = 'ok'
+            result['ftp_status'] = 'ok'
         except ftplib.error_perm as e:
             if str(e).startswith("530"):
-                result['status'] = 'ok'
+                result['ftp_status'] = 'ok'
                 result['anonymous_login'] = False
         except ftplib.all_errors as e:
-            result['status'] = 'error'
-            result['error_type'] = str(e)
+            #status - error
+            result['ftp_status'] = str(e)
             return result
         finally:
             ftp_connection.close()
@@ -52,6 +57,11 @@ class FTPScanner(AbstractScanner):
         # but we also want to reconnect if necessary.
         # That is why I use cred iterator to pick up new login/pass only when
         # we need to.
+        result = {
+                key:None for key in ['ftp_version', 'ftp_status', 'login',
+                'password']
+                }
+        result['ftp_status'] = "error"
         error_count = 0
         it = iter(creds)
         cred = next(it, "")
@@ -66,7 +76,10 @@ class FTPScanner(AbstractScanner):
                     try:
                         ftp_connection.login(user, password)
                         ftp_connection.close()
-                        return user, password
+                        result['ftp_status'] = 'ok'
+                        result['login'] = user
+                        result['password'] = password
+                        return result
                     except ftplib.error_perm as e:
                         # Password was wrong, checking another
                         cred = next(it, "")
@@ -82,4 +95,4 @@ class FTPScanner(AbstractScanner):
                 break
             finally:
                 ftp_connection.close()
-        return None
+        return result

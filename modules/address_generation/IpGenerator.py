@@ -1,17 +1,15 @@
 from core.prototypes.AbstractAddressGenerator import AbstractAddressGenerator
-from core.prototypes.AbstractModuleClass import internal
 from threading import RLock
 import ipaddress
 from types import GeneratorType
 
 class IpGenerator(AbstractAddressGenerator):
 
-    def set_parsed_fields(self, ips : 'ipv4_ranges', ports : 'ports') -> None:
+    def set_parsed_fields(self, ips : 'ipv4_objects', ports : 'ports') -> None:
         self.ips = ips
         self.ports = ports
         self.lock = RLock()
     
-    @internal
     def get_next_port_number(self, previous_port):
         return (self.ports.index(previous_port) + 1) % len(self.ports)
 

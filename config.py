@@ -2,18 +2,22 @@
 config = {
     "parser" : 
     {
-        "name":"GDocsHashParser",
+        "name":"Parser",
         "init_args":{}
     },
     "address_generator" :
     {
-        "name":"GDocsAddressGenerator",
+        "name":"IpGenerator",
         "init_args":{}
     },
     "scanner" : 
     { 
-        "name":"GDocsScanner",
-        "init_args":{}
+        "name":"FTPScanner",
+        "init_args":{
+            "credentials": (
+                ("admin", "admin")
+                )
+            }
     },
     "storage" : 
     {
@@ -21,17 +25,18 @@ config = {
         "init_args":
         {
             "path":"results.json",
-            "json_scheme":{
-                "status":
-                {
-                    "gdoc_prefix":
-                    [
-                        {
-                            "@hash": "gdoc_hash",
-                            "@title": "gdoc_title"
-                        }
-                    ]
-                }
+            "json_scheme":
+            {
+                "ftp_status":
+                [
+                    {
+                        "@ip":"ipv4_str",
+                        "@port":"port",
+                        "@login":"login",
+                        "@password":"password",
+                        "@ftp_version":"ftp_version",
+                    }
+                ]
             }
         }
     }
@@ -54,3 +59,15 @@ config = {
         }
     }
 }'''
+'''scheme for gdocs scanner
+"status":
+{
+    "gdoc_prefix":
+    [
+        {
+            "@hash": "gdoc_hash",
+            "@title": "gdoc_title"
+        }
+    ]
+}
+'''
