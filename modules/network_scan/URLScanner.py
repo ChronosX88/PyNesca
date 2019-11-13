@@ -3,7 +3,7 @@ import requests
 
 class URLScanner(AbstractScanner):
 
-    def __init__(self, timeout):
+    def __init__(self):
        pass 
 
     def scan_address(self, url:"url") -> {"response"}:

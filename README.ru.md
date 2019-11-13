@@ -10,8 +10,8 @@ PySca - сетевой сканер, переписанный на Python
 ------------
 Введите в терминале
 ```bash
-git clone http://github.com/ChronosX88/PySca.git
-cd PySca
+git clone http://github.com/Zloooy/PySca.git
+cd PyNesca
 pip install -r requirements.txt
 ```
 
@@ -22,3 +22,13 @@ pip install -r requirements.txt
 python main.py
 ```
 Находясь в корневой папке PySca
+
+НАСТРОЙКА
+------------
+Тут [описание синтаксиса config.py](./docs/config.ru.md)
+
+
+ХОЧУ СДЕЛАТЬ СВОЙ МОДУЛЬ ДЛЯ PySca
+-------------
+Тут [общие требования к оформлению модуля](./docs/developing_custom_module.md)
+Тут [описание функций конкретных модулей](./docs/classes.ru.md)

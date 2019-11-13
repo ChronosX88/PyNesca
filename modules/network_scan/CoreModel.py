@@ -2,7 +2,7 @@ import socket
 from core.prototypes.AbstractScanner import AbstractScanner
 
 class CoreModel(AbstractScanner):
-    def __init__(self, timeout):
+    def __init__(self, timeout:"timeout"):
         self.defSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.defSocket.settimeout(int(timeout))
 

@@ -34,3 +34,28 @@ class ConvertTable():
         raise Exception("There is no converter for %s to %s" % (from_keys,
         to_key))
         return None, None
+
+    def get_metaconverter(self, from_keys, to_keys):
+        '''This function constructs and returns new function used to provide fast
+        conversion from from_keys to to_keys'''
+        converters_args = [] 
+        converters = []
+        for key in to_keys:
+            keys_to_convert, converter = None, None
+            if key in from_keys:
+                keys_to_convert = [key]
+                converter = lambda x : {key: x}
+            else:
+                keys_to_convert, converter = self.get_converter(from_keys, key)
+            converters_args.append(keys_to_convert)
+            converters.append(converter)
+
+        def metaconverter(args_dict):
+            if args_dict == None:
+                return [None] * len(converters)
+            res = []
+            for i,conv in enumerate(converters):
+                args = [args_dict[arg] for arg in converters_args[i]]
+                res.append(*[value for key, value in conv(*args).items()])
+            return res
+        return metaconverter

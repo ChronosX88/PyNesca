@@ -6,19 +6,19 @@ from PyQt5.Qt import QThread, pyqtSignal
 from PyQt5.QtCore import QObject, pyqtSlot
 from config import config
 from inspect import isfunction
-from communication.communication_utils import complitable_functions, get_converted_arguments
+from communication.communication_utils import complitable_functions, get_converted_arguments, get_argument_annotations, get_return_annotations
 
 CoreModel = import_utils.import_class("modules/network_scan/%s.py" %
-config["scanner"])
+config["scanner"]["name"])
 Parser = import_utils.import_class("modules/address_generation/%s.py" %
-    config["parser"]
+    config["parser"]["name"]
     )
 IpGenerator = import_utils.import_class(
 "modules/address_generation/%s.py" %
-config["address_generator"]
+config["address_generator"]["name"]
 )
 JSONStorage = import_utils.import_class("modules/storage/%s.py" %
-config["storage"])
+config["storage"]["name"])
 convert_table = ConvertTable()
 for func in import_utils.import_matching(
     "modules/convert_functions/",
@@ -36,15 +36,42 @@ for function in [
         msg = "%s is not complitable with %s"
     print(msg % (function, previous))
     previous = function
+convert_for_parser = convert_table.get_metaconverter(
+    {'address_field','port_field'},
+    get_argument_annotations(Parser.parse_fields)
+)
+convert_for_address_generator = convert_table.get_metaconverter(
+    get_return_annotations(Parser.parse_fields),
+    get_argument_annotations(IpGenerator.set_parsed_fields)
+)
+convert_for_scanner = convert_table.get_metaconverter(
+    get_return_annotations(IpGenerator.get_next_address),
+    get_argument_annotations(CoreModel.scan_address)
+)
+convert_for_address_generator_reverse = convert_table.get_metaconverter(
+    get_return_annotations(IpGenerator.get_next_address).union(get_return_annotations(CoreModel.scan_address)),
+    get_argument_annotations(IpGenerator.get_next_address)
+)
+convert_for_storage = None
 
 class MainPresenter:
     def __init__(self, ui):
         self.ui = ui
         self.threads = []
         self.isScanEnabled = False
-        self.parser = Parser()
+        self.parser = Parser(*get_converted_arguments(Parser.__init__,
+        config['parser']['init_args'], convert_table))
         #needed config to specify path
-        self.storage = JSONStorage("results.json")
+        print(*get_converted_arguments(JSONStorage.__init__,
+        config["storage"]["init_args"], convert_table))
+        self.storage = JSONStorage(*get_converted_arguments(JSONStorage.__init__,
+        config["storage"]["init_args"], convert_table))
+        print(get_argument_annotations(self.storage.put_responce))
+        global convert_for_storage
+        convert_for_storage = convert_table.get_metaconverter(
+            get_return_annotations(IpGenerator.get_next_address).union(get_return_annotations(CoreModel.scan_address)),
+            get_argument_annotations(self.storage.put_responce)
+        )
         self.exit_lock = RLock()
 
     def startScan(self, ipRanges, portsStr, threadNumber, timeout):
@@ -52,25 +79,21 @@ class MainPresenter:
         addresses = None
         parser_args = {'port_field':portsStr, 'address_field':ipRanges}
         fields = self.parser.parse_fields(
-                *get_converted_arguments(
-                    self.parser.parse_fields,
-                    parser_args,
-                    convert_table
-                )
+            *convert_for_parser(parser_args)
             )
-        self.scanner = CoreModel(timeout)
+        config["scanner"]["init_args"]["timeout"] = timeout
+        self.scanner = CoreModel(*get_converted_arguments(CoreModel.__init__,
+        config["scanner"]["init_args"], convert_table))
         if CoreModel.INDEPENDENT_THREAD_MANAGEMENT:
             addresses = self.parser.get_all_addresses(ipRanges)
             self.ip_generator = PlugAddressGenerator(addresses, ports)
             threadNumber = 1
         else:
-            self.ip_generator = IpGenerator()
+            self.ip_generator = IpGenerator(
+            *get_converted_arguments(IpGenerator.__init__,
+            config["address_generator"]["init_args"], convert_table))
             self.ip_generator.set_parsed_fields(
-                *get_converted_arguments(
-                    self.ip_generator.set_parsed_fields,
-                    fields,
-                    convert_table
-                    )
+                *convert_for_address_generator(fields)
             )
             threadNumber = int(threadNumber)
             print("thread %i number set" % threadNumber)
@@ -142,30 +165,18 @@ class ScanWorker(QObject):
         while self.isRunning:
             print("worker start")
             scan_address = self.ip_generator.get_next_address(
-                *get_converted_arguments(
-                    self.ip_generator.get_next_address,
-                    self.previous_address,
-                    convert_table
-                )
+                *convert_for_address_generator_reverse(self.previous_address)
             )
             if not scan_address:
                 break
             scan_result = self.scanner.scan_address(
-                    *get_converted_arguments(
-                        self.scanner.scan_address,
-                        scan_address,
-                        convert_table
-                    )
+                    *convert_for_scanner(scan_address)
                 )
             print(scan_result)
             scan_address.update(scan_result)
             self.previous_address = scan_address
             self.storage.put_responce(
-                *get_converted_arguments(
-                self.storage.put_responce,
-                scan_address,
-                convert_table
-                    )
+                *convert_for_storage(scan_address)
                 )
             string_scan_address = " ".join(key + ":" + str(scan_address[key]) for
             key in scan_address.keys()) 

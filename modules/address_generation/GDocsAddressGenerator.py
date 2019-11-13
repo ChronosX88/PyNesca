@@ -1,5 +1,4 @@
 from core.prototypes.AbstractAddressGenerator import AbstractAddressGenerator
-from core.prototypes.AbstractModuleClass import internal
 
 class GDocsAddressGenerator(AbstractAddressGenerator):
     def set_parsed_fields(self, prefix:"gdocs_prefix",
@@ -13,7 +12,6 @@ class GDocsAddressGenerator(AbstractAddressGenerator):
         self.hashlen = len(ranges[0][0])
         self.currange = self.ranges.pop(0)  
 
-    @internal
     def hash2int(self, gdhash):
         alen = len(self.alphabet)
         res = 0
@@ -22,7 +20,6 @@ class GDocsAddressGenerator(AbstractAddressGenerator):
             res += self.revsymbols[symb]
         return res
 
-    @internal
     def int2hash(self, hint):
         alen = len(self.alphabet)
         reshash = [self.alphabet[0]]*self.hashlen
@@ -31,15 +28,15 @@ class GDocsAddressGenerator(AbstractAddressGenerator):
            reshash[i] = self.alphabet[rest]
         return "".join(reshash)
 
-    def get_next_address(self, prev_url:'url') -> {"url"}: 
-        if not prev_url: 
-            return {'url':self.prefix + self.currange[0]}
-        prev_hash = prev_url[prev_url.rfind('/') + 1:]
+    def get_next_address(self, prev_hash:'gdoc_hash') -> {"gdoc_prefix", "gdoc_hash"}: 
+        if not prev_hash: 
+            return {'gdoc_prefix':self.prefix, "gdoc_hash":self.currange[0]}
+        #prev_hash = prev_url[prev_url.rfind('/') + 1:]
         if self.hash2int(self.currange[1]) <= self.hash2int(prev_hash):
             if not self.ranges: return None
             self.currange = self.ranges.pop(0)
-            return {'url' : self.prefix + self.currange[0]}
-        return {'url' : self.prefix + self.int2hash(self.hash2int(prev_hash) +
+            return {'gdoc_prefix' : self.prefix, 'gdoc_hash':self.currange[0]}
+        return {'gdoc_prefix' : self.prefix, 'gdoc_hash':self.int2hash(self.hash2int(prev_hash) +
         1)}
 
     def get_all_addresses(self) -> {'gdocs_prefix', 'gdocs_hash_ranges'}:

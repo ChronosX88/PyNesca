@@ -3,6 +3,8 @@ from core.prototypes.AbstractModuleClass import AbstractModuleClass
 
 class AbstractAddressGenerator(AbstractModuleClass):
     '''The class describes addess generation mechanism.'''
+    INPUT_FUNCTIONS = {"set_parsed_fields", "get_next_address"}
+    OUTPUT_FUNCTIONS = {"get_next_address", "get_all_addresses"}
     @abstractmethod
     def set_parsed_fields(self):
        '''This method is called after generator initialization. It is used to
