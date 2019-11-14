@@ -6,6 +6,8 @@ class AbstractScanner(AbstractModuleClass):
     If it can manage many threads by itself set INDEPENDENT_THREAD_MANAGEMENT
     to "True"'''
     INDEPENDENT_THREAD_MANAGEMENT = False
+    INPUT_FUNCTIONS = {"scan_address"}
+    OUTPUT_FUNCTIONS = {"scan_address"}
 
     @abstractmethod
     def scan_address(self, address):

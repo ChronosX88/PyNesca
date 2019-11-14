@@ -12,8 +12,8 @@ INSTALLATION
 ------------
 Just run
 ```bash
-git clone http://github.com/ChronosX88/PySca.git
-cd PySca
+git clone http://github.com/Zloooy/PySca.git
+cd PyNesca
 pip install -r requirements.txt
 ```
 
